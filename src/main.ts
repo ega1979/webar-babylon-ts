@@ -6,27 +6,49 @@ const main = async () => {
     document.getElementById('renderCanvas')
   );
 
-  if (renderCavas) {
-    const engine = new BABYLON.Engine(renderCavas, true);
-    const scene = new BABYLON.Scene(engine);
+  if (!renderCavas) {
+    return
+  }
 
-    scene.createDefaultCameraOrLight(true, true, true);
-    // scene.createDefaultEnvironment();
+  const engine = new BABYLON.Engine(renderCavas, true);
+  const scene = new BABYLON.Scene(engine);
 
+  scene.createDefaultCameraOrLight(true, true, true);
+  // scene.createDefaultEnvironment();
+
+  const xr = await scene.createDefaultXRExperienceAsync({
+    uiOptions: {
+      sessionMode: 'immersive-ar',
+    },
+    optionalFeatures: true,
+  });
+
+  const featureManager = xr.baseExperience.featuresManager;
+
+  const hitTestOptions: BABYLON.IWebXRHitTestOptions = {
+    enableTransientHitTest: true,
+    disablePermanentHitTest: true,
+    transientHitTestProfile: 'generic-touchscreen',
+  }
+
+  const hitTest = featureManager.enableFeature(
+    BABYLON.WebXRHitTest,
+    'latest',
+    hitTestOptions,
+  ) as BABYLON.WebXRHitTest;
+
+  hitTest?.onHitTestResultObservable.add((results) => {
+    if (results.length) {
+      return
+    }
     const boxSize = 0.2;
     const box = BABYLON.MeshBuilder.CreateBox('box', { size: boxSize });
-    box.position.addInPlaceFromFloats(0, boxSize / 1.2, 0);
+    box.rotationQuaternion = results[0].rotationQuaternion;
+  });
 
-    await scene.createDefaultXRExperienceAsync({
-      uiOptions: {
-        sessionMode: 'immersive-ar',
-      },
-    });
-
-    engine.runRenderLoop(() => {
-      scene.render();
-    });
-  }
+  engine.runRenderLoop(() => {
+    scene.render();
+  });
 }
 
 main();
