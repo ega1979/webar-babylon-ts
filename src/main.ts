@@ -14,7 +14,6 @@ const main = async () => {
   const scene = new BABYLON.Scene(engine);
 
   scene.createDefaultCameraOrLight(true, true, true);
-  // scene.createDefaultEnvironment();
 
   const xr = await scene.createDefaultXRExperienceAsync({
     uiOptions: {
@@ -38,11 +37,12 @@ const main = async () => {
   ) as BABYLON.WebXRHitTest;
 
   hitTest?.onHitTestResultObservable.add((results) => {
-    if (results.length) {
+    if (!results.length) {
       return
     }
     const boxSize = 0.2;
     const box = BABYLON.MeshBuilder.CreateBox('box', { size: boxSize });
+    box.position = results[0].position;
     box.rotationQuaternion = results[0].rotationQuaternion;
   });
 
